@@ -1,8 +1,13 @@
 const baseUrl = 'https://pokeapi.co/api/v2/';
 const $container = document.querySelector('.container');
-
-// const $buttonOne = document.querySelector('.button-one');
-// const $buttonTwo = document.querySelector('.button-two');
+const $prevBtn = document.querySelector('.prevBtn');
+const $nextBtn = document.querySelector('.nextBtn');
+const $page = document.querySelector('.page');
+const limit = 20;
+const total_pokemons = 1118;
+const total_pages = Math.floor(total_pokemons / limit);
+let pageCounter = 1;
+let offsetCounter = 0;
 
 function getRequest(url, query, cb){
     const xhr = new XMLHttpRequest();
@@ -17,73 +22,29 @@ function getRequest(url, query, cb){
     xhr.send();
 }
 
+function getPokemonRequest(url, cb){
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url);
+    xhr.addEventListener('load', () => {
+        const response = JSON.parse(xhr.response);
+        cb(response);
+    })
+    xhr.addEventListener('error', e => {
+        console.error(e);
+    })
+    xhr.send();
+}
+
 window.addEventListener('load', () => {
-    getRequest(`${baseUrl}pokemon`, 'limit=1188&offset=0', cb => {
-        const array = cb.results.map((item, index) => {
-            if(index >= 898){
-                if(index == 1025 || index == 1026 || index == 1050 || index == 1051){
-                    return `
-                        <div class="card">
-                            <div class="card-title">
-                                <p>${item.name} <span>#${(index + 1)}</span></p>
-                            </div>
-                            <div class="card-image">
-                            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${(index + 9102)}.png">
-                            </div>
-                            <div class="card-body">
-                                <button class="moreBtn">More...</button>
-                            </div>
-                        </div>
-                   `
-                }else if(index == 1043){
-                    return `
-                        <div class="card">
-                            <div class="card-title">
-                                <p>${item.name} <span>#${(index + 1)}</span></p>
-                            </div>
-                            <div class="card-image">
-                                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${(index + 9104)}.png" alt="${item.name}">
-                            </div>
-                            <div class="card-body">
-                                <button class="moreBtn">More...</button>
-                            </div>
-                        </div>
-                   `
-                }else{
-                    return `
-                        <div class="card">
-                            <div class="card-title">
-                                <p>${item.name} <span>#${(index + 1)}</span></p>
-                            </div>
-                            <div class="card-image">
-                                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${(index + 9103)}.png" alt="${item.name}">
-                            </div>
-                            <div class="card-body">
-                                <button class="moreBtn">More...</button>
-                            </div>
-                        </div>
-                   `
-                }
-            }else{
-                return `
-                    <div class="card">
-                        <div class="card-title">
-                            <p>${item.name} <span>#${(index + 1)}</span></p>
-                        </div>
-                        <div class="card-image">
-                            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${(index + 1)}.png">
-                        </div>
-                        <div class="card-body">
-                            <button onclick="singlePokemon('${item.url}')" class="moreBtn">More...</button>
-                        </div>
-                    </div>
-               `
-
-            }
-        }).join('');
-
+    getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter}&limit=${limit}`, cb => {
+        const array = cb.results.map((item, index) => cardTemplate(item, index)).join('');
         $container.innerHTML = array
-        
+    })
+
+    getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter}&limit=${limit}`, cb =>{
+        cb.results.forEach(item => {
+            getPokemonRequest(item.url, r) /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
+        });
     })
 })
 
@@ -159,3 +120,126 @@ function singlePokemon(url){
 function reloadBtn(){
     window.location.reload();
 }
+
+
+function cardTemplate(item, index){
+    if(index >= 898){
+        if(index == 1025 || index == 1026 || index == 1050 || index == 1051){
+            return ` 
+                <div class="card">
+                    <div class="card-title">
+                        <p>${item.name} <span>#${(index + 1)}</span></p>
+                    </div>
+                    <div class="card-image">
+                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${(index + 9102)}.png">
+                    </div>
+                    <div class="card-body">
+                        <button class="moreBtn">More...</button>
+                    </div>
+                </div>
+           `
+        }else if(index == 1043){
+            return `
+                <div class="card">
+                    <div class="card-title">
+                        <p>${item.name} <span>#${(index + 1)}</span></p>
+                    </div>
+                    <div class="card-image">
+                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${(index + 9104)}.png" alt="${item.name}">
+                    </div>
+                    <div class="card-body">
+                        <button class="moreBtn">More...</button>
+                    </div>
+                </div>
+           `
+        }else{
+            return `
+                <div class="card">
+                    <div class="card-title">
+                        <p>${item.name} <span>#${(index + 1)}</span></p>
+                    </div>
+                    <div class="card-image">
+                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${(index + 9103)}.png" alt="${item.name}">
+                    </div>
+                    <div class="card-body">
+                        <button class="moreBtn">More...</button>
+                    </div>
+                </div>
+           `
+        }
+    }else{
+        return `
+            <div class="card">
+                <div class="card-title">
+                    <p>${item.name} <span>#${(index + 1)}</span></p>
+                </div>
+                <div class="card-image">
+                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${(index + 1)}.png">
+                </div>
+                <div class="card-body">
+                    <button onclick="singlePokemon('${item.url}')" class="moreBtn">More...</button>
+                </div>
+            </div>
+       `
+
+    }
+}
+
+
+window.addEventListener('load', () => {
+    $page.innerHTML = pageCounter;
+    $prevBtn.setAttribute('disabled', true)
+    $prevBtn.classList.add('disabled')
+})
+
+$nextBtn.addEventListener('click', e => {
+    e.preventDefault();
+
+    $prevBtn.removeAttribute('disabled');
+    $prevBtn.classList.remove('disabled');
+    if(pageCounter >= 1 && pageCounter <= total_pages){
+        if(pageCounter == total_pages){
+            $nextBtn.setAttribute('disabled', true);
+            $nextBtn.classList.add('disabled');
+            getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter += limit}&limit=${limit}`, cb =>{
+                pageCounter++;
+                $page.innerHTML = pageCounter;
+                const array = cb.results.map((item, index) => cardTemplate(item, index)).join('');
+                $container.innerHTML = array;
+            })
+        }else{  
+            getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter += limit}&limit=${limit}`, cb =>{
+                pageCounter++;
+                $page.innerHTML = pageCounter;
+                const array = cb.results.map((item, index) => cardTemplate(item, index)).join('');
+                $container.innerHTML = array;
+            })
+        }
+    }
+})
+
+$prevBtn.addEventListener('click', e => {
+    e.preventDefault();
+
+    if(pageCounter >= 1){
+        pageCounter--;
+        if(pageCounter === 1){
+            $prevBtn.setAttribute('disabled', true);
+            $prevBtn.classList.add('disabled');
+            offsetCounter = 0;
+            getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter}&limit=${limit}`, cb => {
+                $page.innerHTML = pageCounter;
+                const array = cb.results.map((item, index) => cardTemplate(item, index)).join('');
+                $container.innerHTML = array;
+            })
+        }else{
+            getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter -= limit}&limit=${limit}`, cb =>{
+                $nextBtn.removeAttribute('disabled')
+                $nextBtn.classList.remove('disabled')
+                $page.innerHTML = pageCounter;
+                const array = cb.results.map((item, index) => cardTemplate(item, index)).join('');
+                $container.innerHTML = array;
+            });
+        }
+    }
+})
