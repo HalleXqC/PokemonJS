@@ -39,12 +39,21 @@ window.addEventListener('load', () => {
     getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter}&limit=${limit}`, cb => {
         const array = cb.results.map((item, index) => cardTemplate(item, index)).join('');
         $container.innerHTML = array
-    })
+    });
+});
 
-    getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter}&limit=${limit}`, cb =>{
+window.addEventListener('load', () => {
+    let pokemonsData = [];
+    getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter}&limit=${limit}`, cb => {
         cb.results.forEach(item => {
-            getPokemonRequest(item.url, r) /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
+            getPokemonRequest(item.url, r => {
+                pokemonsData.push({...item, ...r.sprites.other})
+                localStorage.setItem('pokemonsData', JSON.stringify(pokemonsData));
+            });
         });
+        const pokemons = JSON.parse(localStorage.getItem('pokemonsData'));
+        const array = pokemons.map(item => cardTemplate(item)).join('');
+        $container.innerHTML = array;
     })
 })
 
