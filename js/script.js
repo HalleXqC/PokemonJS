@@ -7,7 +7,7 @@ const limit = 20;
 const total_pokemons = 1118;
 const total_pages = Math.floor(total_pokemons / limit);
 let pageCounter = 1;
-let offsetCounter = 0;
+let offsetCounter = 20;
 
 function getRequest(url, query, cb){
     const xhr = new XMLHttpRequest();
@@ -34,28 +34,6 @@ function getPokemonRequest(url, cb){
     })
     xhr.send();
 }
-
-window.addEventListener('load', () => {
-    getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter}&limit=${limit}`, cb => {
-        const array = cb.results.map((item, index) => cardTemplate(item, index)).join('');
-        $container.innerHTML = array
-    });
-});
-
-// window.addEventListener('load', () => {
-//     let pokemonsData = [];
-//     getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter}&limit=${limit}`, cb => {
-//         cb.results.forEach(item => {
-//             getPokemonRequest(item.url, r => {
-//                 pokemonsData.push({...item, ...r.sprites.other})
-//                 localStorage.setItem('pokemonsData', JSON.stringify(pokemonsData));
-//             });
-//         });
-//         const pokemons = JSON.parse(localStorage.getItem('pokemonsData'));
-//         const array = pokemons.map(item => cardTemplate(item)).join('');
-//         $container.innerHTML = array;
-//     })
-// })
 
 function singlePokemon(url){
     getRequest(url, '', cb => {
@@ -131,97 +109,83 @@ function reloadBtn(){
 }
 
 
-function cardTemplate(item, index){
-    if(index >= 898){
-        if(index == 1025 || index == 1026 || index == 1050 || index == 1051){
-            return ` 
-                <div class="card">
-                    <div class="card-title">
-                        <p>${item.name} <span>#${(index + 1)}</span></p>
-                    </div>
-                    <div class="card-image">
-                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${(index + 9102)}.png">
-                    </div>
-                    <div class="card-body">
-                        <button class="moreBtn">More...</button>
-                    </div>
-                </div>
-           `
-        }else if(index == 1043){
-            return `
-                <div class="card">
-                    <div class="card-title">
-                        <p>${item.name} <span>#${(index + 1)}</span></p>
-                    </div>
-                    <div class="card-image">
-                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${(index + 9104)}.png" alt="${item.name}">
-                    </div>
-                    <div class="card-body">
-                        <button class="moreBtn">More...</button>
-                    </div>
-                </div>
-           `
-        }else{
-            return `
-                <div class="card">
-                    <div class="card-title">
-                        <p>${item.name} <span>#${(index + 1)}</span></p>
-                    </div>
-                    <div class="card-image">
-                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${(index + 9103)}.png" alt="${item.name}">
-                    </div>
-                    <div class="card-body">
-                        <button class="moreBtn">More...</button>
-                    </div>
-                </div>
-           `
-        }
-    }else{
-        return `
-            <div class="card">
-                <div class="card-title">
-                    <p>${item.name} <span>#${(index + 1)}</span></p>
-                </div>
-                <div class="card-image">
-                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${(index + 1)}.png">
-                </div>
-                <div class="card-body">
-                    <button onclick="singlePokemon('${item.url}')" class="moreBtn">More...</button>
-                </div>
+function cardTemplate(item){
+    return `
+        <div class="card">
+            <div class="card-title">
+                <p>${item.name}</p>
             </div>
-       `
-
-    }
+            <div class="card-image">
+                <img src="${item.dream_world.front_default ? item.dream_world.front_default : item.official-artwork.front_default}">
+            </div>
+            <div class="card-body">
+                <button onclick="singlePokemon('${item.url}')" class="moreBtn">More...</button>
+            </div>
+        </div>
+    `
 }
 
 
 window.addEventListener('load', () => {
-    $page.innerHTML = pageCounter;
+    $page.innerHTML = `${pageCounter} / ${total_pages}`;
     $prevBtn.setAttribute('disabled', true)
-    $prevBtn.classList.add('disabled')
+    $nextBtn.removeAttribute('disabled')
+
+    if(!localStorage.getItem('pokemonsData')){
+        localStorage.setItem('pokemonsData', JSON.stringify([]))
+        reloadBtn()
+    }else{
+        let pokemonsData = [];
+        offsetCounter = 0
+        getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter}&limit=${limit}`, cb => {
+            cb.results.forEach(item => {
+                getPokemonRequest(item.url, r => {
+                    pokemonsData.push({...item, ...r.sprites.other})
+                    localStorage.setItem('pokemonsData', JSON.stringify(pokemonsData));
+                });
+            });
+            const pokemons = JSON.parse(localStorage.getItem('pokemonsData'));
+            const array = pokemons.map(item => cardTemplate(item)).join('');
+            $container.innerHTML = array;
+        })
+    }
 })
 
 $nextBtn.addEventListener('click', e => {
     e.preventDefault();
 
     $prevBtn.removeAttribute('disabled');
-    $prevBtn.classList.remove('disabled');
     if(pageCounter >= 1 && pageCounter <= total_pages){
         if(pageCounter == total_pages){
             $nextBtn.setAttribute('disabled', true);
-            $nextBtn.classList.add('disabled');
-            getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter += limit}&limit=${limit}`, cb =>{
-                pageCounter++;
-                $page.innerHTML = pageCounter;
-                const array = cb.results.map((item, index) => cardTemplate(item, index)).join('');
+            let pokemonsData = [];
+            getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter += limit}&limit=${limit}`, cb => {
+                cb.results.forEach(item => {
+                    getPokemonRequest(item.url, r => {
+                        pokemonsData.push({...item, ...r.sprites.other})
+                        localStorage.setItem('pokemonsData', JSON.stringify(pokemonsData));
+                    });
+                });
+                const pokemons = JSON.parse(localStorage.getItem('pokemonsData'));
+                const array = pokemons.map(item => cardTemplate(item)).join('');
                 $container.innerHTML = array;
+                pageCounter++
+                $page.innerHTML = `${pageCounter} / ${total_pages}`;
             })
         }else{  
-            getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter += limit}&limit=${limit}`, cb =>{
-                pageCounter++;
-                $page.innerHTML = pageCounter;
-                const array = cb.results.map((item, index) => cardTemplate(item, index)).join('');
+            let pokemonsData = [];
+            getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter += limit}&limit=${limit}`, cb => {
+                cb.results.forEach(item => {
+                    getPokemonRequest(item.url, r => {
+                        pokemonsData.push({...item, ...r.sprites.other})
+                        localStorage.setItem('pokemonsData', JSON.stringify(pokemonsData));
+                    });
+                });
+                const pokemons = JSON.parse(localStorage.getItem('pokemonsData'));
+                const array = pokemons.map(item => cardTemplate(item)).join('');
                 $container.innerHTML = array;
+                pageCounter++
+                $page.innerHTML = `${pageCounter} / ${total_pages}`;
             })
         }
     }
@@ -234,21 +198,34 @@ $prevBtn.addEventListener('click', e => {
         pageCounter--;
         if(pageCounter === 1){
             $prevBtn.setAttribute('disabled', true);
-            $prevBtn.classList.add('disabled');
-            offsetCounter = 0;
+            let pokemonsData = [];
             getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter}&limit=${limit}`, cb => {
-                $page.innerHTML = pageCounter;
-                const array = cb.results.map((item, index) => cardTemplate(item, index)).join('');
+                cb.results.forEach(item => {
+                    getPokemonRequest(item.url, r => {
+                        pokemonsData.push({...item, ...r.sprites.other})
+                        localStorage.setItem('pokemonsData', JSON.stringify(pokemonsData));
+                    });
+                });
+                const pokemons = JSON.parse(localStorage.getItem('pokemonsData'));
+                const array = pokemons.map(item => cardTemplate(item)).join('');
                 $container.innerHTML = array;
+                $page.innerHTML = `${pageCounter} / ${total_pages}`;
             })
         }else{
-            getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter -= limit}&limit=${limit}`, cb =>{
-                $nextBtn.removeAttribute('disabled')
-                $nextBtn.classList.remove('disabled')
-                $page.innerHTML = pageCounter;
-                const array = cb.results.map((item, index) => cardTemplate(item, index)).join('');
+            $nextBtn.removeAttribute('disabled')
+            let pokemonsData = [];
+            getRequest(`${baseUrl}pokemon`, `offset=${offsetCounter -= limit}&limit=${limit}`, cb => {
+                cb.results.forEach(item => {
+                    getPokemonRequest(item.url, r => {
+                        pokemonsData.push({...item, ...r.sprites.other})
+                        localStorage.setItem('pokemonsData', JSON.stringify(pokemonsData));
+                    });
+                });
+                const pokemons = JSON.parse(localStorage.getItem('pokemonsData'));
+                const array = pokemons.map(item => cardTemplate(item)).join('');
                 $container.innerHTML = array;
-            });
+                $page.innerHTML = `${pageCounter} / ${total_pages}`;
+            })
         }
     }
 })
